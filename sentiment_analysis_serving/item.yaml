@@ -7,7 +7,7 @@ categories:
 description: BERT based sentiment classification model
 doc: ''
 example: bert_sentiment_analysis_serving.ipynb
-generationDate: '2021-02-13 11:28:47.580822'
+generationDate: '2021-04-21 06:17:16.921852'
 icon: ''
 labels:
   author: roye
@@ -19,9 +19,9 @@ name: sentiment-analysis-serving
 org: Iguazio
 platformVersion: 2.10.0
 spec:
-  filename: function.py
-  handler: ''
-  image: ''
+  filename: sentiment_analysis_serving.py
+  handler: predict
+  image: mlrun/ml-model
   kind: remote
   requirements: []
 url: ''

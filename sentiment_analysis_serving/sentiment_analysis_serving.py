@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from transformers import BertModel, BertTokenizer
 import mlrun
+from mlrun.runtimes import nuclio_init_hook
 
 PRETRAINED_MODEL = 'bert-base-cased'
 tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
@@ -63,3 +64,11 @@ class SentimentClassifierServing(mlrun.serving.V2ModelServer):
             return predicts.cpu().tolist()
         except Exception as e:
             raise Exception("Failed to predict %s" % e)
+
+
+def init_context(context):
+    nuclio_init_hook(context, globals(), 'serving_v2')
+
+
+def handler(context, event):
+    return context.mlrun_handler(context, event)
