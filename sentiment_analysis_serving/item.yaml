@@ -10,7 +10,7 @@ example: bert_sentiment_analysis_serving.ipynb
 generationDate: '2021-04-21 06:17:16.921852'
 icon: ''
 labels:
-  author: roye
+  author: avia
   framework: pytorch
 maintainers: []
 marketplaceType: ''
@@ -20,9 +20,9 @@ org: Iguazio
 platformVersion: 2.10.0
 spec:
   filename: sentiment_analysis_serving.py
-  handler: predict
+  handler: handler
   image: mlrun/ml-model
-  kind: remote
-  requirements: []
+  kind: serving
+  requirements:
 url: ''
 version: 0.0.1

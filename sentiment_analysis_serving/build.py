@@ -10,21 +10,23 @@ def upload_items():
 
 def build(item_attributes):
     # create job function object from notebook code
-    fn = mlrun.code_to_function(
-        item_attributes["name"],
-        kind=item_attributes["spec"]["kind"],
-        handler=item_attributes["spec"]["handler"],
+    fn = code_to_function(
+        name=item_attributes["name"],
         filename=item_attributes["spec"]["filename"],
+        handler=item_attributes["spec"]["handler"],
+        kind=item_attributes["spec"]["kind"],
         image=item_attributes["spec"]["image"],
         description=item_attributes["description"],
+        requirements=item_attributes["spec"]["requirements"],
         categories=item_attributes["categories"],
         labels=item_attributes["labels"],
-        requirements=item_attributes["spec"]["requirements"],
+        with_doc=False
     )
 
     fn.export("sentiment_analysis_serving.yaml")
 
 
-if __name__ == "__main__":
+def handler():
     items = upload_items()
     build(items)
+
