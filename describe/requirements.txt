@@ -1,0 +1,5 @@
+pytest
+mlrun
+matplotlib
+seaborn
+scikit-plot
