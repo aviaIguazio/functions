@@ -35,7 +35,7 @@ def test_local_sentiment_analysis_serving():
     fn = import_function('hub://sentiment_analysis_serving')
     fn.add_model('mymodel', model_path=model, class_name='SentimentClassifierServing')
     # create an emulator (mock server) from the function configuration)
-    server = fn.to_to_mock_server()
+    server = fn.to_mock_server()
 
     instances = ['I had a pleasure to work with such dedicated team. Looking forward to \
                  cooperate with each and every one of them again.']
