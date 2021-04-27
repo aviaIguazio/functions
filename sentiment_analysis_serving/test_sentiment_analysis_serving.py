@@ -33,11 +33,6 @@ def test_local_sentiment_analysis_serving():
         download_pretrained_model(model_path)
     mlrun.mlconf.hub_url = 'https://raw.githubusercontent.com/aviaIguazio/functions/development/sentiment_analysis_serving/function.yaml'
     fn = import_function('hub://sentiment_analysis_serving')
-    # fn = code_to_function(name='test_sentiment',
-    #                       filename="sentiment_analysis_serving.py",
-    #                       handler="handler",
-    #                       kind="serving",
-    #                       image="mlrun/ml-models-gpu")
     fn.add_model('mymodel', model_path=model, class_name='SentimentClassifierServing')
     # create an emulator (mock server) from the function configuration)
     server = fn.to_to_mock_server()
