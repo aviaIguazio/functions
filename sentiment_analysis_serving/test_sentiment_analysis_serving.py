@@ -31,19 +31,19 @@ def test_local_sentiment_analysis_serving():
     model = model_path+'/model.pt'
     if not path.exists(model):
         download_pretrained_model(model_path)
-    #fn = import_function('hub://sentiment_analysis_serving')
-    fn = code_to_function(name='test_sentiment',
-                          filename="sentiment_analysis_serving.py",
-                          handler="handler",
-                          kind="serving",
-                          image="mlrun/ml-models-gpu")
-    fn.add_model('mymodel', model_path=model)
+    mlrun.mlconf.hub_url = 'https://raw.githubusercontent.com/aviaIguazio/functions/development/sentiment_analysis_serving/function.yaml'
+    fn = import_function('hub://sentiment_analysis_serving')
+    # fn = code_to_function(name='test_sentiment',
+    #                       filename="sentiment_analysis_serving.py",
+    #                       handler="handler",
+    #                       kind="serving",
+    #                       image="mlrun/ml-models-gpu")
+    fn.add_model('mymodel', model_path=model, class_name='SentimentClassifierServing')
     # create an emulator (mock server) from the function configuration)
-    server = fn.to_mock_server()
+    server = fn.to_to_mock_server()
 
     instances = ['I had a pleasure to work with such dedicated team. Looking forward to \
                  cooperate with each and every one of them again.']
     result = server.test("/v2/models/mymodel/infer", {"instances": instances})
     assert result[0] == 2
 
-    #result.keys()
