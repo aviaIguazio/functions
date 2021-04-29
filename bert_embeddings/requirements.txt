@@ -1,0 +1,4 @@
+mlrun == 0.6.2
+nuclio
+transformers
+torch

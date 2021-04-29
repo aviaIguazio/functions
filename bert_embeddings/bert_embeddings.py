@@ -1,6 +1,5 @@
 from transformers import BertModel, BertTokenizer
 import torch
-from typing import Union, List
 import json
 import pickle
 
