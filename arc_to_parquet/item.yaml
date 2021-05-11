@@ -11,15 +11,15 @@ labels:
   author: yjb
 maintainers: []
 marketplaceType: ''
-mlrunVersion: 0.5.4
+mlrunVersion: 0.6.2
 name: arc-to-parquet
 org: Iguazio
 platformVersion: 2.10.0
 spec:
   filename: arc_to_parquet.py
   handler: arc_to_parquet
-  image: mlrun/ml-base
+  image: mlrun/ml-models
   kind: job
-  requirements: ['mlrun','pandas','pyarrow']
+  requirements: ['mlrun==0.6.2','pandas','pyarrow']
 url: ''
 version: 0.0.1

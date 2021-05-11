@@ -57,7 +57,7 @@ def test_py(root_dir=".", clean=False):
         exit(0)
 
     install_pipenv()
-
+    testable_items.sort()
     for directory in testable_items:
         directory = directory.resolve()
 

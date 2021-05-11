@@ -3,19 +3,11 @@ import wget
 from mlrun import import_function
 import os.path
 from os import path
-import mlrun
-from pygit2 import Repository
+from churn_server import *
 
 
 MODEL_PATH = os.path.join(os.path.abspath('./'), 'models')
 MODEL = MODEL_PATH + "model.pt"
-
-
-def set_mlrun_hub_url():
-    branch = Repository('.').head.shorthand
-    hub_url = "https://raw.githubusercontent.com/mlrun/functions/{}/churn_server/function.yaml".format(
-        branch)
-    mlrun.mlconf.hub_url = hub_url
 
 
 def download_pretrained_model(model_path):
@@ -30,12 +22,11 @@ def download_pretrained_model(model_path):
 
 
 def test_local_churn_server():
-    set_mlrun_hub_url()
     model_path = os.path.join(os.path.abspath('./'), 'models')
     model = model_path+'/model.pt'
     if not path.exists(model):
         raise NotImplemented
-    fn = import_function('hub://churn_server')
+    fn = import_function('function.yaml')
     fn.add_model('mymodel', model_path=model, class_name='ChurnModel')
     # create an emulator (mock server) from the function configuration)
     server = fn.to_mock_server()
