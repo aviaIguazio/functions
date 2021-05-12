@@ -1,8 +1,7 @@
-from feature_selection import feature_selection
-from mlrun import new_task, run_local
 from pathlib import Path
 import os
-import shutil
+from mlrun import code_to_function
+from feature_selection import feature_selection
 
 ARTIFACTS_PATH ='artifacts'
 
@@ -18,17 +17,21 @@ def _validate_paths(paths: {}):
 
 
 def test_run_local():
-    if Path(ARTIFACTS_PATH).is_dir():
-        shutil.rmtree(ARTIFACTS_PATH)
+    cwd = os.getcwd()
+    fn = code_to_function(name='test_feature_selection',
+                          filename="feature_selection.py",
+                          handler="feature_selection",
+                          kind="job",
+                          )
+    fn.run(name="task-feature-selection",
 
-    task = new_task(name="task-feature-selection",
-                    handler = feature_selection,
                     params={'k': 2,
                            'min_votes': 0.3,
-                           'label_column': 'is_error'},
+                           'label_column': 'is_error',
+                            },
                    inputs={'df_artifact': 'data/metrics.pq'},
-                   )
-    run_local(task=task,
-              artifact_path=os.path.join(os.path.abspath('./'), 'artifacts'))
+            local=True
+           )
     _validate_paths({'feature_scores.parquet',
                      'selected_features.parquet'})
+    print("fails on '<Buffer>': Invalid: Parquet file size is 0 bytes")

@@ -19,6 +19,9 @@ from sklearn.utils import all_estimators
 from mlrun.mlutils.plots import gcf_clear
 from mlrun.utils.helpers import create_class
 from mlrun.artifacts import PlotArtifact
+from mlrun.datastore import DataItem
+
+from typing import Union
 
 
 def show_values_on_bars(axs, h_v="v", space=0.4):
@@ -68,7 +71,7 @@ def plot_stat(context,
 
 
 def feature_selection(context,
-                      df_artifact,
+                      df_artifact: Union[DataItem, pd.core.frame.DataFrame],
                       k=2,
                       min_votes=0.5,
                       label_column: str = 'Y',
@@ -84,6 +87,9 @@ def feature_selection(context,
     If a feature has >= 'min_votes' votes, it will be selected.
 
     :param context:           the function context
+    :param df_artifact: MLRun input pointing to pandas dataframe (csv/parquet file path) or a
+                        directory containing parquet files.
+                        * When given a directory the latest {files_to_select} will be selected
     :param k:                 number of top features to select from each statistical
                               function or model
     :param min_votes:         minimal number of votes (from a model or by statistical
