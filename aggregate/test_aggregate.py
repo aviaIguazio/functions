@@ -19,8 +19,9 @@ def test_run_local_aggregate():
     fn = code_to_function(name='test_aggregate',
                           filename="aggregate.py",
                           handler="aggregate",
-                          kind="job",
+                          kind="local",
                           )
+    fn.spec.command = "aggregate.py"
     fn.run(params={'metrics': ['cpu_utilization'],
                    'labels': ['is_error'],
                    'metric_aggs': ['mean', 'sum'],
@@ -31,7 +32,7 @@ def test_run_local_aggregate():
                    'center': True,
                    'save_to': AGGREGATE_PATH,
                    'files_to_select': 2}
-           , local=True
+           #, local=True
            , inputs={'df_artifact': METRICS_PATH}
            )
     assert Path(AGGREGATE_PATH).is_file()
