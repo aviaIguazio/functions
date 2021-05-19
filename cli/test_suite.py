@@ -17,13 +17,14 @@ from cli.path_iterator import PathIterator
 @click.command()
 @click.option("-r", "--root-directory", default=".", help="Path to root directory")
 @click.option("-s", "--suite", help="Type of suite to run [py/ipynb/examples/items]")
-def test_suite(root_directory: str, suite: str):
+@click.option("-t", "--test-directory", help="directory of single function for single test run")
+def test_suite(root_directory: str, suite: str, test_directory: str):
     if not suite:
         click.echo("-s/--suite is required")
         exit(1)
 
     if suite == "py":
-        test_py(root_directory, clean=True)
+        test_py(root_directory, test_directory, clean=True)
     elif suite == "ipynb":
         test_ipynb(root_directory, clean=True)
     elif suite == "examples":
@@ -35,7 +36,7 @@ def test_suite(root_directory: str, suite: str):
         exit(1)
 
 
-def test_py(root_dir=".", clean=False):
+def test_py(root_dir=".", test_directory=None, clean=False):
     click.echo("Collecting items...")
 
     item_iterator = PathIterator(root=root_dir, rule=is_item_dir, as_path=True)
@@ -49,8 +50,11 @@ def test_py(root_dir=".", clean=False):
             )
         )
         if testable:
-            testable_items.append(item_dir)
-
+            if test_directory is not None:
+                if str(item_dir.resolve()).endswith(test_directory):
+                    testable_items.append(item_dir)
+            else:
+                testable_items.append(item_dir)
     click.echo(f"Found {len(testable_items)} testable items...")
 
     if not testable_items:
@@ -209,15 +213,15 @@ def clean(root_dir="."):
 
 def is_test_notebook(path: Path) -> bool:
     return (
-        path.is_file() and path.name.startswith("test") and path.name.endswith(".ipynb")
+            path.is_file() and path.name.startswith("test") and path.name.endswith(".ipynb")
     )
 
 
 def is_example_notebook(path: Path) -> bool:
     return (
-        path.is_file()
-        and not path.name.startswith("test")
-        and path.name.endswith(".ipynb")
+            path.is_file()
+            and not path.name.startswith("test")
+            and path.name.endswith(".ipynb")
     )
 
 

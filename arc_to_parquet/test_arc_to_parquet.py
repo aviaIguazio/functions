@@ -1,4 +1,4 @@
-from mlrun import import_function
+from mlrun import code_to_function
 from pathlib import Path
 import shutil
 import os
@@ -16,14 +16,16 @@ def _delete_outputs(paths):
 
 
 def test_arc_to_parquet():
-    # cwd = os.getcwd()
-    # fn = import_function("function.yaml")
-    # fn.run(params={'archive_url': ARCHIVE,
-    #                'key': 'HIGGS'},
-    #        artifact_path=cwd,
-    #        local=True
-    #        )
-    # _delete_outputs({ARTIFACTS_PATH, RUNS_PATH, SCHEDULES_PATH})
-    print("fails")
+    fn = code_to_function(name='test_arc_to_parquet',
+                          filename="arc_to_parquet.py",
+                          handler="arc_to_parquet",
+                          kind="local",
+                          )
+    fn.spec.command = "arc_to_parquet.py"
+    fn.run(params={'archive_url': ARCHIVE,
+                    'key': 'HIGGS'}
+           #, local=True
+           )
+    _delete_outputs({ARTIFACTS_PATH, RUNS_PATH, SCHEDULES_PATH})
 
 

@@ -60,7 +60,8 @@ def arc_to_parquet(
         file_ext: str = "parquet",
         index: bool = False,
         refresh_data: bool = False,
-        stats: bool = False
+        stats: bool = False,
+        artifacts_path: str = 'artifacts',
 ) -> None:
     """Open a file/object archive and save as a parquet file or dataset
 
@@ -90,7 +91,7 @@ def arc_to_parquet(
     :param refresh_data:   (False) overwrite existing data at that location
     :param stats:          (None) calculate table stats when logging artifact
     """
-    base_path = context.artifact_path
+    base_path = artifacts_path
     os.makedirs(base_path, exist_ok=True)
 
     archive_url = archive_url.local()
