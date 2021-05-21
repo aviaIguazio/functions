@@ -1,5 +1,5 @@
 from feature_selection import feature_selection
-from mlrun import new_task, run_local
+from mlrun import new_task, run_local , import_function
 from pathlib import Path
 import os
 import shutil
@@ -30,5 +30,16 @@ def test_run_local():
                    )
     run_local(task=task,
               artifact_path=os.path.join(os.path.abspath('./'), 'artifacts'))
+    _validate_paths({'feature_scores.parquet',
+                     'selected_features.parquet'})
+
+
+def test_feature_selection_import_item_generated_function():
+    fn = import_function("gen_function.yaml")
+    fn.run(params={'k': 2,
+                           'min_votes': 0.3,
+                           'label_column': 'is_error'},
+                   inputs={'df_artifact': 'data/metrics.pq'},
+            local=True)
     _validate_paths({'feature_scores.parquet',
                      'selected_features.parquet'})

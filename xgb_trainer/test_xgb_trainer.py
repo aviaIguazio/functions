@@ -1,4 +1,4 @@
-from mlrun import code_to_function
+from mlrun import code_to_function, import_function
 import os
 
 
@@ -17,7 +17,7 @@ def get_class_data():
         "file_ext": "csv"}, local=True, artifact_path="./artifacts/inputs")
 
 
-def test_xgb_trainer():
+def test_xgb_trainer_code_to_function():
     get_class_data()
     fn = code_to_function(name='test_xgb_trainer',
                           filename="xgb_trainer.py",
@@ -36,3 +36,18 @@ def test_xgb_trainer():
 
     assert(os.path.exists(os.getcwd() + "/models/model.pkl"))
 
+
+def test_xgb_trainer_item_generated_function():
+    get_class_data()
+    fn = import_function('gen_function.yaml')
+    fn.run(params= {
+        "model_type": "classifier",
+        "CLASS_tree_method": "hist",
+        "CLASS_objective": "binary:logistic",
+        "CLASS_booster": "gbtree",
+        "FIT_verbose": 0,
+        "label_column": "labels",
+        "test_set": "./artifacts/test-set"},
+        local=True, inputs={"dataset": './artifacts/inputs/classifier-data.csv'})
+
+    assert(os.path.exists(os.getcwd() + "/models/model.pkl"))

@@ -1,4 +1,4 @@
-from mlrun import code_to_function
+from mlrun import code_to_function, import_function
 import os
 
 
@@ -35,13 +35,21 @@ def xgb_trainer():
         local=True, inputs={"dataset": './artifacts/inputs/classifier-data.csv'})
 
 
-def test_xgb_test():
+def test_xgb_test_code_to_function():
     xgb_trainer()
-    fn = code_to_function(name='test_xgb_test',
-                          filename=os.path.dirname(os.path.dirname(__file__)) + "/xgb_test/xgb_test.py",
-                          handler="xgb_test",
-                          kind="job",
-                          )
+    fn = import_function("gen_function.yaml")
+    fn.run(params={
+        "label_column": "labels",
+        "plots_dest": "plots/xgb_test"},
+        local=True, inputs={"test_set": "./artifacts/inputs/classifier-data.csv",
+                            "models_path": os.getcwd() + "/models/model.pkl"})
+
+    assert(os.path.exists(os.getcwd() + "/models/model.pkl"))
+
+
+def test_xgb_test_import_item_generated_function():
+    xgb_trainer()
+    fn = import_function("gen_function.yaml")
     fn.run(params={
         "label_column": "labels",
         "plots_dest": "plots/xgb_test"},

@@ -1,5 +1,5 @@
 from describe import summarize
-from mlrun import new_task, run_local
+from mlrun import new_task, run_local, import_function
 from pathlib import Path
 import os
 import shutil
@@ -18,7 +18,7 @@ def _validate_paths(paths: {}):
             raise FileNotFoundError
 
 
-def test_run_local():
+def test_describe_code_to_function():
     if Path(PLOTS_PATH).is_dir():
         shutil.rmtree(PLOTS_PATH)
     task = new_task(name="task-describe",
@@ -27,6 +27,23 @@ def test_run_local():
                     params={'update_dataset': True,
                             'label_column': 'label'})
     run_local(task)
+    _validate_paths({'corr.html',
+                     'correlation-matrix.csv',
+                     'hist.html',
+                     'imbalance.html',
+                     'imbalance-weights-vec.csv',
+                     'violin.html'})
+
+
+def test_describe_import_item_generated_function():
+    if Path(PLOTS_PATH).is_dir():
+        shutil.rmtree(PLOTS_PATH)
+    fn = import_function('gen_function.yaml')
+    fn.run(handler=summarize,
+                    inputs={"table": DATA_URL},
+                    params={'update_dataset': True,
+                            'label_column': 'label'}
+           , local=True)
     _validate_paths({'corr.html',
                      'correlation-matrix.csv',
                      'hist.html',
