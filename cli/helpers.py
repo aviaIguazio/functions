@@ -12,6 +12,15 @@ def is_item_dir(path: Path) -> bool:
     return path.is_dir() and (path / "item.yaml").exists()
 
 
+def is_function_dir(path: Path) -> bool:
+    if path.is_file():
+        return False
+    # dir_name = path.name
+    # ipynb_found = any((f.name.endswith(".ipynb") for f in path.iterdir()))
+    # py_found = any((f.name.endswith(".py") for f in path.iterdir()))
+    return any((f.name == "function.yaml" for f in path.iterdir()))
+
+
 def render_jinja_file(
     template_path: Union[str, Path], output_path: Union[str, Path], data: dict
 ):
@@ -48,7 +57,9 @@ def install_python(directory: Union[str, Path]):
     stderr = python_install.stderr.decode("utf8")
     stderr = stderr.split("\n")
     python_location = [l for l in stderr if "Virtualenv location: " in l]
-    python_location = python_location[0].split("Virtualenv location: ")[-1] + "bin/python"
+    python_location = (
+        python_location[0].split("Virtualenv location: ")[-1] + "bin/python"
+    )
     return python_location
 
 

@@ -4,7 +4,7 @@ categories:
 description: deploy an XGBoost model server.
 doc: ''
 example: xgb_serving.ipynb
-generationDate: ''
+generationDate: 2021-05-19:23-13
 icon: ''
 labels:
   author: Daniel
@@ -12,13 +12,12 @@ maintainers: []
 marketplaceType: ''
 mlrunVersion: 0.6.2
 name: xgb_test
-org: Iguazio
 platformVersion: 3.0.0
 spec:
   filename: xgb_serving.py
-  handler: XGBoostModel
-  image: mlrun/mlrun
-  kind: job
-  requirements: ['mlrun','pandas','typing','xgboost','cloudpickle','pygit2', 'sklearn']
+  handler: handler
+  image: mlrun/ml-models
+  kind: remote
+  requirements: []
 url: ''
 version: 0.0.1
