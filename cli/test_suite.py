@@ -172,6 +172,8 @@ class TestPY(TestSuite):
                         break
             click.echo(f"Found {len(testables)} testable items...")
 
+        testables.sort()
+
         if not testables:
             click.echo(
                 "No tests found, make sure your test file names are structures as 'test_*.py')"
