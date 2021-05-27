@@ -13,7 +13,7 @@ from sphinx.ext.apidoc import main as sphinx_apidoc_cmd
 
 from cli.helpers import (
     is_item_dir,
-    render_jinja_file,
+    render_jinja,
     PROJECT_ROOT,
     get_item_yaml_requirements,
 )
@@ -53,8 +53,8 @@ def build_marketplace_cli(
 ):
     build_marketplace(
         source_dir,
-        source_name,
         marketplace_dir,
+        source_name,
         temp_dir,
         channel,
         verbose,
@@ -63,17 +63,17 @@ def build_marketplace_cli(
 
 def build_marketplace(
     source_dir: str,
-    source_name: str,
     marketplace_dir: str,
-    temp_dir: str,
-    channel: str,
-    verbose: bool,
+    source_name: Optional[str] = None,
+    temp_dir: str = "/tmp",
+    channel: str = "development",
+    verbose: bool = False,
 ):
     """Main entry point to marketplace building
 
     :param source_dir: Path to the source directory to build the marketplace from
-    :param source_name: Name of source, if not provided, name of source directory will be used instead
     :param marketplace_dir: Path to marketplace directory
+    :param source_name: Name of source, if not provided, name of source directory will be used instead
     :param temp_dir: Path to intermediate directory, used to build marketplace resources,
     if not provided '/tmp/<random_uuid>' will be used
     :param channel: The name of the marketplace channel to write to
@@ -119,7 +119,7 @@ def build_marketplace(
     copy_static_resources(marketplace_dir, temp_docs)
 
     update_or_create_items(source_dir, marketplace_dir, temp_docs, change_log)
-    build_catalog_json(marketplace_dir)
+    build_catalog_json(marketplace_dir, (marketplace_root / "catalog.json"))
 
     if _verbose:
         print_file_tree("Resulting marketplace structure", marketplace_dir)
@@ -156,55 +156,13 @@ def write_change_log(readme_path: Path, change_log: ChangeLog):
 
 def write_index_html(marketplace_root: Union[str, Path]):
     marketplace_root = Path(marketplace_root)
-    items = []
-    item_num = 0
-    for source_dir in marketplace_root.iterdir():
-        if source_dir.is_file() or source_dir.name.startswith("."):
-            continue
+    index_path = marketplace_root / "index.html"
+    template_path = PROJECT_ROOT / "cli" / "marketplace" / "index.html"
 
-        source_name = source_dir.name
-        for channel_dir in source_dir.iterdir():
-            if channel_dir.is_file() or channel_dir.name.startswith("."):
-                continue
+    if index_path.exists():
+        index_path.unlink()
 
-            channel_name = channel_dir.name
-
-            catalog_path = channel_dir / "catalog.json"
-            catalog = json.load(open(catalog_path))
-
-            for item_name, item in catalog.items():
-                item_num += 1
-                remote_base_url = (
-                    Path(source_name) / channel_name / item_name / "latest"
-                )
-                latest = item["latest"]
-                version = latest["version"]
-                generation_date = latest["generationDate"]
-                file_name = latest["spec"]["filename"].split(".")[0]
-                file_url = remote_base_url / f"{file_name}.html"
-                example_url = remote_base_url / f"{file_name}_example.html"
-                items.append(
-                    {
-                        "item_num": item_num,
-                        "source_name": source_name,
-                        "channel_name": channel_name,
-                        "item_name": item_name,
-                        "version": version,
-                        "generation_date": generation_date,
-                        "file_url": file_url,
-                        "example_url": example_url,
-                    }
-                )
-
-    if items:
-        index_path = marketplace_root / "index.html"
-        if index_path.exists():
-            index_path.unlink()
-        render_jinja_file(
-            template_path=PROJECT_ROOT / "cli" / "marketplace" / "index.template",
-            output_path=index_path,
-            data={"items": items},
-        )
+    shutil.copy(template_path, index_path)
 
 
 def copy_static_resources(marketplace_dir, temp_docs):
@@ -220,25 +178,34 @@ def update_or_create_items(source_dir, marketplace_dir, temp_docs, change_log):
         update_or_create_item(item_dir, marketplace_dir, temp_docs, change_log)
 
 
-def build_catalog_json(target_dir: Union[str, Path]):
+def build_catalog_json(
+    marketplace_dir: Union[str, Path], catalog_path: Union[str, Path]
+):
     click.echo("Building catalog.json...")
-    target_dir = Path(target_dir)
-    catalog_path = target_dir / "catalog.json"
+
+    marketplace_dir = Path(marketplace_dir)
+    channel = marketplace_dir.name
+    source = marketplace_dir.parent.name
+
     catalog = json.load(open(catalog_path, "r")) if catalog_path.exists() else {}
 
-    for source_dir in target_dir.iterdir():
+    if source not in catalog:
+        catalog[source] = {}
+    if channel not in catalog[source]:
+        catalog[source][channel] = {}
+    for source_dir in marketplace_dir.iterdir():
         if not source_dir.is_dir() or source_dir.name == "_static":
             continue
 
         latest_dir = source_dir / "latest"
-        source_yaml_path = latest_dir / "item.yaml"
+        source_yaml_path = latest_dir / "src" / "item.yaml"
 
         latest_yaml = yaml.full_load(open(source_yaml_path, "r"))
         latest_yaml["generationDate"] = str(latest_yaml["generationDate"])
 
         latest_version = latest_yaml["version"]
 
-        catalog[source_dir.name] = {"latest": latest_yaml}
+        catalog[source][channel][source_dir.name] = {"latest": latest_yaml}
         for version_dir in source_dir.iterdir():
             version = version_dir.name
 
@@ -246,7 +213,7 @@ def build_catalog_json(target_dir: Union[str, Path]):
                 version_yaml_path = version_dir / "item.yaml"
                 version_yaml = yaml.full_load(open(version_yaml_path, "r"))
                 version_yaml["generationDate"] = str(version_yaml["generationDate"])
-                catalog[source_dir.name][version] = version_yaml
+                catalog[source][channel][source_dir.name][version] = version_yaml
 
     json.dump(catalog, open(catalog_path, "w"))
 
@@ -266,33 +233,92 @@ def update_or_create_item(
         click.echo("Source version already exists in target directory!")
         return
 
-    build_path = temp_docs / "_build"
-    source_html_name = f"{item_dir.stem}.html"
+    documentation_html_name = f"{item_dir.stem}.html"
     example_html_name = f"{item_dir.stem}_example.html"
 
-    source_html = build_path / source_html_name
-    update_html_resource_paths(source_html, relative_path="../../")
+    build_path = temp_docs / "_build"
+
+    documentation_html = build_path / documentation_html_name
+    update_html_resource_paths(documentation_html, relative_path="../../../")
 
     example_html = build_path / example_html_name
-    update_html_resource_paths(example_html, relative_path="../../")
+    update_html_resource_paths(example_html, relative_path="../../../")
+
+    latest_src = target_latest / "src"
+    version_src = target_version / "src"
 
     # If its the first source is encountered, copy source to target
-    if marketplace_item.exists():
-        shutil.rmtree(target_latest)
+    if latest_src.exists():
+        shutil.rmtree(latest_src)
         change_log.update_item(item_dir.stem, source_version, target_version.name)
     else:
         change_log.new_item(item_dir.stem, source_version)
 
-    shutil.copytree(item_dir, target_latest)
-    shutil.copytree(item_dir, target_version)
+    latest_static = target_latest / "static"
+    version_static = target_version / "static"
 
-    if source_html.exists():
-        shutil.copy(source_html, target_latest / source_html_name)
-        shutil.copy(source_html, target_version / source_html_name)
+    shutil.copytree(item_dir, latest_src)
+    shutil.copytree(item_dir, version_src)
+
+    latest_static.mkdir(parents=True, exist_ok=True)
+    version_static.mkdir(parents=True, exist_ok=True)
+
+    if documentation_html.exists():
+        shutil.copy(documentation_html, latest_static / "documentation.html")
+        shutil.copy(documentation_html, version_static / "documentation.html")
 
     if example_html.exists():
-        shutil.copy(example_html, target_latest / example_html_name)
-        shutil.copy(example_html, target_version / example_html_name)
+        shutil.copy(example_html, latest_static / "example.html")
+        shutil.copy(example_html, version_static / "example.html")
+
+    templates = PROJECT_ROOT / "cli" / "marketplace"
+
+    source_py_name = item_yaml.get("spec", {}).get("filename", "")
+    if source_py_name.endswith(".py") and (item_dir / source_py_name).exists():
+
+        with open((item_dir / source_py_name), "r") as f:
+            source_code = f.read()
+
+        render_jinja(
+            templates / "python.html",
+            latest_static / "source.html",
+            {"source_code": source_code},
+        )
+        render_jinja(
+            templates / "python.html",
+            version_static / "source.html",
+            {"source_code": source_code},
+        )
+
+    with open((item_dir / "item.yaml"), "r") as f:
+        source_code = f.read()
+
+    render_jinja(
+        templates / "yaml.html",
+        latest_static / "item.html",
+        {"source_code": source_code},
+    )
+    render_jinja(
+        templates / "yaml.html",
+        version_static / "item.html",
+        {"source_code": source_code},
+    )
+
+    with open((item_dir / "function.yaml"), "r") as f:
+        source_code = f.read()
+
+    render_jinja(
+        templates / "yaml.html",
+        latest_static / "function.html",
+        {"source_code": source_code},
+    )
+    render_jinja(
+        templates / "yaml.html",
+        version_static / "function.html",
+        {"source_code": source_code},
+    )
+
+    pass
 
 
 def update_html_resource_paths(html_path: Path, relative_path: str):
@@ -332,7 +358,12 @@ def patch_temp_docs(source_dir, temp_docs):
             item = yaml.full_load(f)
 
         example_file = directory / item["example"]
-        shutil.copy(example_file, temp_docs / f"{directory.name}_example.ipynb")
+        if example_file:
+            example_file = Path(example_file)
+            shutil.copy(
+                example_file,
+                temp_docs / f"{directory.name}_example{example_file.suffix}",
+            )
 
 
 def build_temp_project(source_dir, temp_root):
@@ -352,12 +383,12 @@ def build_temp_project(source_dir, temp_root):
             item = yaml.full_load(f)
 
         filename = item.get("spec")["filename"]
+        temp_dir = temp_root / directory.name
+        temp_dir.mkdir(parents=True, exist_ok=True)
+        (temp_dir / "__init__.py").touch()
+
         if filename:
             py_file = directory / filename
-            temp_dir = temp_root / directory.name
-            temp_dir.mkdir(parents=True, exist_ok=True)
-
-            (temp_dir / "__init__.py").touch()
             temp_file = temp_dir / py_file.name
             shutil.copy(py_file, temp_file)
 
@@ -373,6 +404,16 @@ def collect_temp_requirements(source_dir) -> Set[str]:
         item_requirements = get_item_yaml_requirements(directory)
         for item_requirement in item_requirements:
             requirements.add(item_requirement)
+        requirements_txt = directory / "requirements.txt"
+        if requirements_txt.exists():
+            with open(requirements_txt, "r") as f:
+                lines = f.read().split("\n")
+                for line in filter(lambda l: l, lines):
+                    requirements.add(line)
+
+    parsed = set()
+    for req in requirements:
+        parsed.add(req.split("==")[0])
 
     if _verbose:
         click.echo(f"[Temporary project] Done requirements ({', '.join(requirements)})")
@@ -400,7 +441,7 @@ def sphinx_quickstart(
     conf_py_target = temp_root / "conf.py"
     conf_py_target.unlink()
 
-    render_jinja_file(
+    render_jinja(
         template_path=PROJECT_ROOT / "cli" / "marketplace" / "conf.template",
         output_path=conf_py_target,
         data={
@@ -425,5 +466,5 @@ def build_temp_docs(temp_root, temp_docs):
 
 
 if __name__ == "__main__":
-    # build_marketplace("")
-    build_marketplace_cli()
+    # build_marketplace_cli()
+    build_marketplace("../../", "../../../marketp")
