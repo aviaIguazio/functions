@@ -46,7 +46,7 @@ def test_suite(root_directory: str,
         )
     elif suite == "ipynb":
         TestIPYNB(stop_on_failure=stop_on_failure, clean_env_artifacts=True)._run(
-            root_directory, multi_processing
+            root_directory, multi_processing, function_name
         )
     elif suite == "examples":
         test_example(root_directory)
@@ -312,6 +312,7 @@ class TestIPYNB(TestSuite):
             for inner_file in path.iterdir():
                 if self.is_test_ipynb(inner_file):
                     testables.append(str(inner_file.resolve()))
+                    break
             if testables:
                 click.echo("Found testable directory...")
         # Handle multiple directories
@@ -321,7 +322,7 @@ class TestIPYNB(TestSuite):
                 # Iterate individual files in each directory
                 for inner_file in inner_dir.iterdir():
                     if self.is_test_ipynb(inner_file):
-                        testables.append(str(inner_file.resolve()))
+                        testables.append(str(inner_dir.resolve()))
             click.echo(f"Found {len(testables)} testable items...")
 
         if not testables:
@@ -329,7 +330,7 @@ class TestIPYNB(TestSuite):
                 "No tests found, make sure your test file names are structures as 'test_*.py')"
             )
             exit(0)
-
+        testables.sort()
         return testables
 
     def before_run(self):
@@ -418,15 +419,15 @@ class TestIPYNB(TestSuite):
                 click.echo(complete_subprocess.stderr.decode("utf-8"))
                 exit(test_result.status_code)
 
-    def _run(self, path: Union[str, Path]):
-        super()._run(path)
+    # def _run(self, path: Union[str, Path]):
+    #     super()._run(path)
 
     @staticmethod
     def is_test_ipynb(path: Path):
         return (
             path.is_file()
-            and path.name.startswith("test_")
-            and path.name.endswith(".py")
+            #and path.name.startswith("test_")
+            and path.name.endswith(".ipynb")
         )
 
 
