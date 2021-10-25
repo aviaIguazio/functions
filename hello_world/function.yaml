@@ -1,0 +1,36 @@
+kind: job
+metadata:
+  name: hello-world
+  tag: ''
+  hash: 2a51e550a90b2cd25080b2303a19aa5e350b2921
+  project: default
+  labels:
+    author: avia
+  categories:
+  - data-preparation
+spec:
+  command: ''
+  args: []
+  image: mlrun/mlrun
+  env: []
+  default_handler: hello_world
+  entry_points:
+    hello_world:
+      name: hello_world
+      doc: ''
+      parameters:
+      - name: context
+        default: ''
+      outputs:
+      - default: ''
+      lineno: 3
+  description: saying hello to marketplace
+  build:
+    functionSourceCode: CgpkZWYgaGVsbG9fd29ybGQoY29udGV4dCk6CiAgICBwcmludCggIndoZW4gd2lsbCB3ZSBzdXBwb3J0IG11bHRpcGxlIGhhbmRsZXJzICwgaGVsbG9vb28iKQo=
+    commands: []
+    code_origin: https://aviaIguazio@github.com/aviaIguazio/functions.git#6408a423303d6028c02cd4ecc954839fe0410d55:/Users/aviasulin/PycharmProjects/mlrun/functions/hello_world/hello_world.py
+    origin_filename: /Users/aviasulin/PycharmProjects/mlrun/functions/hello_world/hello_world.py
+  disable_auto_mount: false
+  priority_class_name: ''
+  affinity: null
+verbose: false
