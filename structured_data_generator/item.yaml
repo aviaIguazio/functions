@@ -3,7 +3,7 @@ categories:
 - machine-learning
 - data-preparation
 - data-generation
-- GenAI
+- genai
 description: GenAI approach of generating structured data according to a given schema
 doc: ''
 example: structured_data_generator.ipynb
@@ -14,9 +14,9 @@ labels:
   author: zeevr
 maintainers: []
 marketplaceType: ''
-mlrunVersion: 1.5.2
+mlrunVersion: 1.6.1
 name: structured_data_generator
-platformVersion: 3.5.0
+platformVersion: 3.5.5
 spec:
   filename: structured_data_generator.py
   handler: generate_data
@@ -26,4 +26,4 @@ spec:
   - langchain
   - tqdm
 url: ''
-version: 1.4.0
+version: 1.5.0
